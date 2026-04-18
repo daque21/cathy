@@ -358,7 +358,7 @@ def upload_file_to_folder():
 @app.route("/delete_audio/<int:audio_id>", methods=["POST"])
 def delete_audio(audio_id):
     conn = get_db_connection()  # ✅ gamit imong existing connector
-    cursor = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
 
     # Kuhaa ang audio file path
@@ -395,7 +395,7 @@ def serve_uploaded_files(filename):
 def serve_uploads(filename):
     return send_from_directory("uploads", filename)
     
-=======
+
 import json
 from flask import Flask, render_template, request, redirect, url_for
 import os
@@ -474,6 +474,5 @@ def dashboard():
 
     return render_template("dashboard.html", jobs=jobs, role=role)
 
->>>>>>> 1dead62f58b475183d9fb7ff814466c7ecc0a74a
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
