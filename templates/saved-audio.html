@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saved Audio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background:#1e1e1e;
+            color:white;
+            text-align:center;
+            padding:50px;
+        }
+        .audio-card {
+            background:#2a2a2a;
+            border-radius:15px;
+            padding:20px;
+            margin:20px auto;
+            width:300px;
+        }
+        .audio-card audio {
+            width:100%;
+            margin-top:10px;
+        }
+        .back-btn {
+            margin-top:30px;
+            padding:10px 20px;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            font-size:16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>💾 Saved Audio</h1>
+    <p>All your recorded voice clips will appear here.</p>
+
+    <!-- Dynamic saved audio list -->
+    {% for audio in audios %}
+    <div class="audio-card">
+        <strong>{{ audio.audio_name }}</strong>
+
+        <audio controls>
+            <source src="/{{ audio.audio_path }}" type="audio/webm">
+            Your browser does not support the audio element.
+        </audio>
+
+        <p>Recorded at: {{ audio.recorded_at }}</p>
+
+        <!-- DELETE BUTTON -->
+        <form action="/delete_audio/{{ audio.audio_id }}" method="POST">
+            <button 
+                type="submit"
+                style="margin-top:10px; background:red; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;"
+                onclick="return confirm('Delete this audio?')">
+                🗑 Delete
+            </button>
+        </form>
+
+    </div>
+{% else %}
+    <p>No recordings yet.</p>
+{% endfor %}
+
+    <button class="back-btn" onclick="goBack()">🔙 Back</button>
+
+    <script>
+        function goBack() {
+            window.location.href = "/dashboard"; // return to dashboard or main page
+        }
+        const audios = document.querySelectorAll("audio");
+
+    audios.forEach(audio => {
+        audio.addEventListener("play", () => {
+            audios.forEach(otherAudio => {
+                if (otherAudio !== audio) {
+                    otherAudio.pause();
+                    otherAudio.currentTime = 0; // optional: balik sa start
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Password Popup Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        .popup-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+            text-align: center;
+            position: absolute;
+        }
+
+        .popup-box input, .popup-box button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .popup-box button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .popup-box button:hover {
+            background-color: #0056b3;
+        }
+
+        /* hide second popup initially */
+        #login-box {
+            display: none;
+        }
+        
+        #main-interface button {
+    margin: 0 20px;
+    padding: 40px 50px;
+    font-size: 35px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+        }
+        
+        #main-interface button:hover {
+    background-color: #ddd;
+}
+
+      .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 150px); /* fixed width columns para square */
+    grid-auto-rows: 150px; /* fixed height para square */
+    gap: 20px;
+    justify-content: start; /* start sa left */
+    align-content: start;   /* start sa top */
+}
+
+.dash-btn {
+    width: 100%;
+    height: 100%;
+    font-size: 24px;
+    border-radius: 15px;
+    border: 2px solid #ccc;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.dash-btn:hover {
+    background-color: #ddd;
+    transform: scale(1.05);
+}
+
+   .recorder-ui{
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:900px;
+    background:#1e1e1e;
+    color:white;
+    border-radius:100px;
+    padding:100px;
+    text-align:center;
+    box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+.rec-header{
+    display:flex;
+    justify-content:space-between;
+    font-size:20px;
+    margin-bottom:20px;
+}
+
+#close-rec{
+    cursor:pointer;
+}
+
+.mic-icon{
+    font-size:90px;
+    margin-bottom:10px;
+}
+
+#record-status{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+#timer{
+    font-size:28px;
+    margin-bottom:20px;
+}
+
+.rec-controls button{
+    padding:10px 20px;
+    margin:5px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+#start-rec{
+    background:#28a745;
+    color:white;
+}
+
+#stop-rec{
+    background:#dc3545;
+    color:white;
+}
+
+#dashboard{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:#121212;
+    color:white;
+    padding:40px;
+}
+
+.dash-header{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.dash-header h1{
+    font-size:40px;
+}
+
+.dash-header p{
+    opacity:0.7;
+}
+
+.dashboard-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, 220px);
+    gap:30px;
+    justify-content:center;
+}
+
+.dash-card{
+    background:#1f1f1f;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(0,0,0,0.4);
+}
+
+.dash-card:hover{
+    transform:scale(1.05);
+    background:#2a2a2a;
+}
+
+.dash-icon{
+    font-size:50px;
+    margin-bottom:15px;
+}
+
+.dash-card h3{
+    margin:10px 0;
+}
+
+.dash-card p{
+    font-size:14px;
+    opacity:0.7;
+}
+
+.back-card{
+    background:#2b1e1e;
+}
+
+.video-preview-container{
+    position:absolute;
+    bottom:600px;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+.video-preview-container video{
+    display:none;
+    margin-top:10px;
+}
+    </style>
+</head>
+<body>
+    <!-- CREATE PASSWORD POPUP -->
+    <div class="popup-box" id="create-box" style="display: {{ 'block' if show_create_box else 'none' }};">
+        <h2>Create Password</h2>
+        <input type="password" id="create-input" placeholder="Enter password">
+        <button id="create-btn">Create</button>
+    </div>
+
+    <!-- LOGIN POPUP -->
+    <div class="popup-box" id="login-box" style="display: {{ 'none' if show_create_box else 'block' }};">
+        <h2>Login</h2>
+        <input type="password" id="login-input" placeholder="Enter password">
+        <button id="login-btn">Login</button>
+    </div>
+    
+    <!-- MAIN INTERFACE (hidden initially) -->
+    <div id="main-interface" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#1e1e1e; color:white; text-align:center;">
+
+<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+
+    <div style="font-size:120px;">🔐</div>
+
+    <h1 style="font-size:40px; margin:10px 0;">
+        Welcome to AudioVault
+    </h1>
+
+    <p style="font-size:18px; opacity:0.8;">
+        Securely store and manage your recordings
+    </p>
+
+    <!-- BUTTONS -->
+    <div style="margin-top:40px;">
+        <button id="audio-btn">🎵 recording_audio</button>
+        <button id="task-btn">📋 Accumulated_Task</button>
+    </div>
+
+</div>
+
+</div>
+    
+   <div id="dashboard">
+
+<div class="dash-header">
+    <h1>📋 Accumulated Task</h1>
+    <p>Manage all your stored audio and files</p>
+</div>
+
+<div class="dashboard-grid">
+
+    <div class="dash-card" id="songs-btn">
+        <div class="dash-icon">🎶</div>
+        <h3>Songs</h3>
+        <p>Saved music recordings</p>
+    </div>
+
+    <div class="dash-card" id="files-btn">
+        <div class="dash-icon">📁</div>
+        <h3>Files</h3>
+        <p>Audio file collection</p>
+    </div>
+
+    <div class="dash-card" id="folders-btn">
+        <div class="dash-icon">📂</div>
+        <h3>Folders</h3>
+        <p>Organize your recordings</p>
+    </div>
+
+    <div class="dash-card" id="saved-audio-btn">
+        <div class="dash-icon">💾</div>
+        <h3>Saved Audio</h3>
+        <p>Recorded voice clips</p>
+    </div>
+
+    <div class="dash-card back-card" id="back-btn">
+        <div class="dash-icon">🔙</div>
+        <h3>Back</h3>
+        <p>Return to main screen</p>
+    </div>
+
+</div>
+
+</div>
+    
+  <!-- RECORDING ICON POPUP -->
+  
+<div id="recording-popup" class="recorder-ui">  <div class="rec-header">  
+    🎙 Audio Recorder
+    <span id="close-rec">✖</span>  
+</div>  
+
+<div class="rec-body">
+    <div class="mic-icon">🎤</div>  
+    <div id="record-status">Ready to record</div>  
+    <div id="timer">00:00</div>  
+</div>  
+
+<div class="rec-controls">  
+    <button id="start-rec">▶ Start</button>  
+    <button id="stop-rec">⏹ Stop</button>
+    <h2>Select_A_Song_To_Play: </h2>
+    <input type="file" id="temp-video-picker" accept="video/*">
+    <span id="back-rec">🔙 Back</span> 
+</div>
+     
+
+<div class="video-preview-container">
+    <video id="temp-video-player" width="880" controls></video>
+</div>
+
+<script>
+    const backRec = document.getElementById("back-rec");
+
+backRec.onclick = () => {
+    recordingPopup.style.display = "none";
+    mainInterface.style.display = "block";
+
+    // Optional: reset timer & status
+    clearInterval(interval);
+    timer.innerText = "00:00";
+    statusText.innerText = "Ready to record";
+}
+    const tempPicker = document.getElementById('temp-video-picker');
+const tempPlayer = document.getElementById('temp-video-player');
+
+tempPicker.onchange = () => {
+    if(tempPicker.files.length === 0) return;
+
+    const file = tempPicker.files[0];
+
+    // Create a temporary URL for the selected video
+    const videoURL = URL.createObjectURL(file);
+
+    // Set the video source and show player
+    tempPlayer.src = videoURL;
+    tempPlayer.style.display = "block";
+
+    // Optional: revoke object URL when done playing
+    tempPlayer.onended = () => URL.revokeObjectURL(videoURL);
+};   
+      document.addEventListener("DOMContentLoaded", () => {
+
+const foldersBtn = document.getElementById("folders-btn");
+
+if (foldersBtn){
+    foldersBtn.onclick = () => {
+        window.location.href = "/folders";
+    }
+}
+
+});
+      const filesBtn = document.getElementById('files-btn');
+
+filesBtn.onclick = () => {
+    window.location.href = "/files";   // page sa files
+}
+
+      const savedAudioBtn = document.getElementById('saved-audio-btn');
+
+savedAudioBtn.onclick = () => {
+    window.location.href = "/saved-audio"; // bagong page
+}
+      const songsBtn = document.getElementById('songs-btn');
+
+songsBtn.onclick = () => {
+    // Pwede mo redirect sa upload page
+    window.location.href = "/upload-songs";
+}
+     const startRec = document.getElementById("start-rec");  
+const stopRec = document.getElementById("stop-rec");  
+const timer = document.getElementById("timer");  
+const statusText = document.getElementById("record-status");  
+const closeRec = document.getElementById("close-rec");  
+
+let seconds = 0;
+let interval;
+let mediaRecorder;
+let audioChunks = [];
+
+startRec.onclick = async () => {
+    try {
+        // 1. Mic stream
+        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // 2. Video stream (audio only) ✅ SAFE VERSION
+        let videoAudioTrack = null;
+
+        if (tempPlayer.src) {
+            const videoStream = tempPlayer.captureStream();
+            const tracks = videoStream.getAudioTracks();
+
+            if (tracks.length > 0) {
+                videoAudioTrack = tracks[0];
+            }
+        }
+
+        // 3. Create audio context to mix mic + video
+        const audioContext = new AudioContext();
+        const destination = audioContext.createMediaStreamDestination();
+
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        micSource.connect(destination);
+
+        // ✅ Only connect video if it exists
+        if (videoAudioTrack) {
+            const videoSource = audioContext.createMediaStreamSource(
+                new MediaStream([videoAudioTrack])
+            );
+            videoSource.connect(destination);
+        }
+
+        // 4. Mixed audio stream (KEEP YOUR LOGIC)
+        const mixedStream = new MediaStream();
+        destination.stream.getAudioTracks().forEach(track => 
+            mixedStream.addTrack(track)
+        );
+
+        // 5. Start recorder
+        mediaRecorder = new MediaRecorder(mixedStream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.start();
+
+        // 6. Timer ✅ ADD clearInterval for safety
+        statusText.innerText = "Recording...";
+        seconds = 0;
+
+        clearInterval(interval); // 🔥 IMPORTANT FIX
+
+        interval = setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+
+            timer.innerText =
+                String(mins).padStart(2,'0') + ":" +
+                String(secs).padStart(2,'0');
+        }, 1000);
+
+        console.log("Recording mixed audio...");
+
+    } catch (err) {
+        console.error(err);
+        alert("Error starting recording (mic/video issue)");
+    }
+};
+
+stopRec.onclick = () => {
+    clearInterval(interval);
+    statusText.innerText = "Recording stopped";
+
+    if(mediaRecorder && mediaRecorder.state !== "inactive"){
+        mediaRecorder.stop();
+    }
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+
+        const fileName = "recording_" + Date.now() + ".webm";
+        formData.append("audio_file", audioBlob, fileName);
+        formData.append("audio_name", fileName);
+
+        try {
+            const res = await fetch("/save-recorded-audio", {
+                method: "POST",
+                body: formData
+            });
+            const result = await res.text();
+            alert(result);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save audio.");
+        }
+    }
+};
+
+
+     const taskBtn = document.getElementById('task-btn');
+const mainInterface = document.getElementById('main-interface');
+const dashboard = document.getElementById('dashboard');
+const backBtn = document.getElementById('back-btn');
+
+// Show dashboard when Accumulated Task clicked
+taskBtn.onclick = () => {
+    mainInterface.style.display = 'none';
+    dashboard.style.display = 'block';
+
+    // Hide recording popup kung nagpakita pa
+    recordingPopup.style.display = 'none';
+}
+
+// Back button to return to main interface
+backBtn.onclick = () => {
+    dashboard.style.display = 'none';
+    mainInterface.style.display = 'block';
+}
+     const audioBtn = document.getElementById('audio-btn');
+     const recordingPopup = document.     getElementById('recording-popup');
+audioBtn.onclick = () => {
+    mainInterface.style.display = "none";
+    recordingPopup.style.display = "block";
+}
+
+    const createBox = document.getElementById('create-box');
+    const loginBox = document.getElementById('login-box');
+    const createInput = document.getElementById('create-input');
+    const createBtn = document.getElementById('create-btn');
+
+    const loginInput = document.getElementById('login-input');
+    const loginBtn = document.getElementById('login-btn');
+    
+    window.addEventListener('DOMContentLoaded', () => {
+    const createBox = document.getElementById('create-box');
+    const loginBox = document.getElementById('login-box');
+    const mainInterface = document.getElementById('main-interface');
+
+    // Use sessionStorage for temporary login state
+    const loggedIn = sessionStorage.getItem('loggedIn');
+
+    if (!loggedIn) {
+        // Show create/login popup
+        const showCreate = {{ 'true' if show_create_box else 'false' }};
+        createBox.style.display = showCreate ? 'block' : 'none';
+        loginBox.style.display = showCreate ? 'none' : 'block';
+        mainInterface.style.display = 'none';
+    } else {
+        // Already logged in this session
+        createBox.style.display = 'none';
+        loginBox.style.display = 'none';
+        mainInterface.style.display = 'block';
+    }
+});
+
+    // CREATE PASSWORD
+    createBtn.onclick = async () => {
+        const pw = createInput.value;
+        if(!pw) return alert("Enter a password first!");
+
+        const res = await fetch('/register', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({password: pw})
+        });
+        const result = await res.text();
+        alert(result);
+
+        // Hide create box, show login box
+        createBox.style.display = 'none';
+        loginBox.style.display = 'block';
+    }
+
+    // LOGIN PASSWORD
+loginBtn.onclick = async () => {
+    const pw = loginInput.value;
+    if(!pw) return alert("Enter your password to login!");
+
+    const res = await fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({password: pw})
+    });
+    const result = await res.text();
+
+    if(result === "LOGIN SUCCESS") {
+        alert("Logged in successfully!");
+        // mark as logged in for this session only
+        sessionStorage.setItem('loggedIn', 'true');
+
+        loginBox.style.display = 'none';
+        createBox.style.display = 'none';
+        mainInterface.style.display = 'block';
+    } else {
+        alert("Invalid password, try again.");
+    }
+}
+
+</script>
+
+</body>
+</html>

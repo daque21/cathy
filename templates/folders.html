@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Folders</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#121212;
+    color:white;
+    padding:40px;
+    text-align:center;
+}
+
+/* CENTER BUTTON */
+.create-btn{
+    padding:15px 30px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+}
+
+.create-btn:hover{
+    background:#45a049;
+}
+
+.folder-grid{
+    margin-top:30px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,150px);
+    gap:20px;
+    justify-content:center;
+}
+
+.folder{
+    background:#1f1f1f;
+    padding:30px;
+    text-align:center;
+    border-radius:15px;
+    cursor:pointer;
+}
+
+.folder:hover{
+    background:#2a2a2a;
+}
+
+/* MODAL */
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+}
+
+.modal-content{
+    background:#1f1f1f;
+    padding:20px;
+    border-radius:10px;
+    width:300px;
+    margin:150px auto;
+}
+
+.modal input{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+}
+
+.modal button{
+    margin-top:10px;
+    padding:10px;
+    width:100%;
+}
+
+/* SPECIAL DOWNLOAD BUTTON */
+.download-btn{
+    padding:10px 20px;
+    font-size:16px;
+    border:none;
+    border-radius:8px;
+    background:#ff9800;   /* bright orange */
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.download-btn:hover{
+    background:#e68a00;   /* darker orange on hover */
+    transform:scale(1.05);
+}
+.delete-btn{
+    padding:10px 20px;
+    font-size:16px;
+    border:none;
+    border-radius:8px;
+    background:red;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.delete-btn:hover{
+    background:#cc0000;
+    transform:scale(1.05);
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>📂 My Folders</h1>
+
+<!-- BUTTON LANG -->
+<button class="create-btn" onclick="openModal()">Create Folder</button>
+
+<!-- FOLDERS -->
+<div class="folder-grid" id="folder-list"></div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3>Create Folder</h3>
+        <input type="text" id="folder-name" placeholder="Folder name">
+        <input type="file" id="file-input" multiple style="display:none;">
+        <button onclick="createFolder()">Create</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- FILE VIEW MODAL -->
+<!-- FILE VIEW MODAL -->
+<div class="modal" id="file-modal">
+  <div class="modal-content">
+    <h3>📁 Folder Files</h3>
+    <div id="file-list"></div>
+
+    <!-- BUTTONS -->
+    <button id="open-upload-modal-btn">Upload File</button>
+    <button onclick="closeFileModal()">Close</button>
+  </div>
+</div>
+
+<!-- NEW MODAL FOR FILE NAME -->
+<div class="modal" id="upload-name-modal">
+    <div class="modal-content">
+        <h3>Enter File Name</h3>
+        <input type="text" id="upload-file-name" placeholder="File name">
+        <input type="file" id="select-file" style="display:none;">
+        <button onclick="selectFile()">Select File</button>
+        <button onclick="closeUploadNameModal()">Cancel</button>
+    </div>
+</div>
+
+<button class="back-btn" onclick="goBack()">🔙 Back</button>
+
+<script>
+function goBack() {
+            window.location.href = "/dashboard"; // return to dashboard or main page
+        }
+        
+async function loadFolders(){
+    const res = await fetch("/get-folders");
+    const folders = await res.json();
+
+    const list = document.getElementById("folder-list");
+    list.innerHTML = "";
+
+    folders.forEach(folder => {
+        const div = document.createElement("div");
+        div.className = "folder";
+        div.innerHTML = "📁<br>" + folder.folder_name;
+
+        div.onclick = () => {
+            loadFiles(folder.folder_id, folder.folder_name);
+        };
+
+        list.appendChild(div);
+    });
+}
+
+function openUploadModal() {
+    document.getElementById("upload-name-modal").style.display = "block";
+}
+
+function closeUploadNameModal() {
+    document.getElementById("upload-name-modal").style.display = "none";
+}
+
+function selectFile() {
+    const fileNameInput = document.getElementById("upload-file-name");
+
+    if(!fileNameInput.value){
+        alert("Enter a file name first!");
+        return;
+    }
+
+    const fileInput = document.getElementById("select-file");
+
+    fileInput.value = ""; // reset
+    fileInput.click();
+
+    fileInput.onchange = async function(){
+        const file = fileInput.files[0];
+
+        if(!file){
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder_id", currentFolderId);
+        formData.append("file_name", fileNameInput.value);
+
+        const res = await fetch("/upload-file-to-folder", {
+            method:"POST",
+            body: formData
+        });
+
+        if(!res.ok){
+            alert("Upload failed!");
+            return;
+        }
+
+        const result = await res.json(); // ✅ now mo-run na
+        alert(result.message);
+
+        fileInput.value = ""; // reset after upload
+        closeUploadNameModal();
+        loadFiles(currentFolderId);
+    }
+}
+let currentFolderId = null;
+
+function chooseFile(){
+    document.getElementById("upload-inside-folder").click();
+}
+
+// detect selected files
+const uploadInput = document.getElementById("upload-inside-folder");
+
+if(uploadInput){
+    uploadInput.onchange = async function(){
+
+        const files = this.files;
+        const formData = new FormData();
+
+        for(let i=0; i<files.length; i++){
+            formData.append("files", files[i]);
+        }
+
+        formData.append("folder_id", currentFolderId);
+
+        await fetch("/upload-file", {
+            method:"POST",
+            body:formData
+        });
+
+        alert("Files uploaded!");
+        loadFiles(currentFolderId);
+    };
+}
+
+function openFileModal(){
+    document.getElementById("file-modal").style.display="block";
+}
+
+function closeFileModal(){
+    document.getElementById("file-modal").style.display="none";
+}
+
+function openModal(){
+    document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+    document.getElementById("modal").style.display="none";
+}
+
+async function createFolder(){
+
+    const name = document.getElementById("folder-name").value;
+
+    if(!name){
+        alert("Enter folder name");
+        return;
+    }
+
+    const res = await fetch("/create-folder",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({folder_name:name})
+    });
+
+    const result = await res.json(); 
+alert("Folder Created!");
+
+loadFolders();
+
+// clear input
+document.getElementById("folder-name").value = "";
+
+closeModal();
+
+    // 👉 open file selector AFTER create
+    const fileInput = document.getElementById("file-input");
+    fileInput.click();
+
+    // 👉 when user selects files
+    fileInput.onchange = async function(){
+
+        const files = fileInput.files;
+
+        const formData = new FormData();
+
+        for(let i=0; i<files.length; i++){
+            formData.append("files", files[i]);
+        }
+
+        // important: kinahanglan nimo folder_id gikan backend
+        formData.append("folder_id", result.folder_id);
+
+        await fetch("/upload-file",{
+            method:"POST",
+            body:formData
+        });
+
+        alert("Files uploaded!");
+        fileInput.value = "";
+    }
+}
+
+async function loadFiles(folder_id, folder_name) {
+    currentFolderId = folder_id;
+
+    openFileModal();
+
+    const modalTitle = document.querySelector("#file-modal h3");
+    modalTitle.textContent = "📁 " + folder_name + " Files";
+
+    const res = await fetch("/get-files/" + folder_id);
+    const files = await res.json();
+
+    const list = document.getElementById("file-list");
+    list.innerHTML = "";
+
+    if (files.length === 0) {
+    list.innerHTML = "<p>No files in this folder</p>";
+} else {
+    files.forEach(file => {
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.justifyContent = "space-between";
+    div.style.alignItems = "center";
+    div.style.marginBottom = "8px";
+
+    const span = document.createElement("span");
+    span.textContent = "📄 " + file.file_name;
+
+    const btnGroup = document.createElement("div");
+
+    // DOWNLOAD
+    const downloadBtn = document.createElement("button");
+    downloadBtn.textContent = "Download";
+    downloadBtn.className = "download-btn";
+
+    downloadBtn.onclick = () => {
+        const link = document.createElement("a");
+        link.href = "/" + file.file_path;
+        link.download = file.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // DELETE
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.style.background = "red";
+    deleteBtn.style.color = "white";
+    deleteBtn.style.marginLeft = "5px";
+
+    deleteBtn.onclick = async () => {
+        if(!confirm("Delete this file?")) return;
+
+        const res = await fetch("/delete-file", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                file_path: file.file_path
+            })
+        });
+
+        const result = await res.json();
+        alert(result.message);
+
+        loadFiles(currentFolderId);
+    };
+
+    btnGroup.appendChild(downloadBtn);
+    btnGroup.appendChild(deleteBtn);
+
+    div.appendChild(span);
+    div.appendChild(btnGroup);
+
+    list.appendChild(div);
+});
+}
+    // Upload button opens "enter file name" modal
+    const uploadBtn = document.getElementById("open-upload-modal-btn");
+    uploadBtn.onclick = () => {
+        document.getElementById("upload-name-modal").style.display = "block";
+        document.getElementById("upload-file-name").value = "";
+        document.getElementById("select-file").value = "";
+    };
+}
+
+window.onload = loadFolders;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Files</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+h2, h3 {
+    color: #333;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+/* Grid container */
+.files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+/* Each file box */
+.file-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.file-box:hover {
+    transform: translateY(-5px);
+}
+
+/* File icon */
+.file-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+/* File name */
+.file-name {
+    font-size: 14px;
+    word-break: break-word;
+}
+
+/* Link button */
+.file-link a {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 3px 8px;
+    background: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.file-link a:hover {
+    background: #0056b3;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Files</h2>
+<p>Diri makita imong files sa box view.</p>
+
+<form id="uploadForm" method="post" enctype="multipart/form-data">
+  <input type="file" name="fileUpload" 
+         accept="audio/*,image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx" 
+         multiple>
+  <button type="submit">Upload File</button>
+</form>
+
+<h3>Uploaded Files:</h3>
+<div class="files-grid">
+  {% for file in files %}
+<div class="file-box">
+
+    <div class="file-icon">
+        {% if file.file_name.endswith(('.jpg','.jpeg','.png','.gif')) %}
+            📷
+        {% elif file.file_name.endswith(('.mp3','.wav','.ogg')) %}
+            🎵
+        {% elif file.file_name.endswith('.pdf') %}
+            📄
+        {% elif file.file_name.endswith(('.xls','.xlsx')) %}
+            📊
+        {% elif file.file_name.endswith(('.doc','.docx')) %}
+            📝
+        {% else %}
+            📁
+        {% endif %}
+    </div>
+
+    <div class="file-name">{{ file.file_name }}</div>
+
+    <!-- PREVIEW -->
+    {% if file.file_name.endswith(('.jpg','.jpeg','.png','.gif')) %}
+    <img src="/{{ file.file_path }}" width="100%">
+
+{% elif file.file_name.endswith(('.mp3','.wav','.ogg')) %}
+    <audio controls>
+        <source src="/{{ file.file_path }}">
+    </audio>
+
+{% elif file.file_name.endswith('.pdf') %}
+    <iframe src="/{{ file.file_path }}" width="100%" height="200"></iframe>
+
+{% else %}
+    <p>open_to_download</p>
+{% endif %}
+
+    <div class="file-link">
+        <a href="/uploaded_files/{{ file.file_name }}" target="_blank">Open</a>
+    </div>
+
+</div>
+{% endfor %}
+<button class="back-btn" onclick="goBack()">🔙 Back</button>
+
+<script>
+function goBack() {
+            window.location.href = "/dashboard"; // return to dashboard or main page
+        }
+const form = document.getElementById("uploadForm");
+const fileInput = form.querySelector('input[name="fileUpload"]');
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // prevent normal submit
+
+    if (fileInput.files.length === 0) {
+        alert("Palihug pagpili ug file una mag-upload!");
+        return;
+    }
+
+    const formData = new FormData(form);
+
+    const response = await fetch("/upload-files", {
+        method: "POST",
+        body: formData
+    });
+
+    const result = await response.text();
+    alert(result);
+    location.reload();
+});
+</script>
+
+</body>
+</html>

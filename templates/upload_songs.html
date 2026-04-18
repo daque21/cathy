@@ -1,0 +1,236 @@
+<!DOCTYPE html><html>
+<head>
+<title>Upload Songs</title><style>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+margin-top:40px;
+background:#f5f6fa;
+}
+
+/* Upload Button */
+#startUpload{
+padding:10px 20px;
+font-size:16px;
+cursor:pointer;
+background:#2f80ed;
+color:white;
+border:none;
+border-radius:6px;
+}
+
+/* Song List */
+.songList{
+margin-top:30px;
+width:400px;
+margin-left:auto;
+margin-right:auto;
+}
+
+/* Song Item */
+.songItem{
+display:flex;
+align-items:center;
+background:white;
+padding:12px;
+margin-bottom:10px;
+border-radius:8px;
+cursor:pointer;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+transition:0.2s;
+}
+
+/* Hover effect */
+.songItem:hover{
+background:#e8f0fe;
+transform:scale(1.02);
+}
+
+/* Icon */
+.icon{
+font-size:22px;
+margin-right:12px;
+}
+
+/* Song Name */
+.songName{
+font-weight:bold;
+flex:1;
+text-align:left;
+}
+
+/* Small type label */
+.songType{
+font-size:12px;
+color:gray;
+}
+
+/* Popup background */
+#uploadPopup {
+    display: none; /* start hidden */
+    position: fixed; /* stay on screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5); /* semi-transparent dark background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* make sure it's on top */
+}
+
+/* Popup content box */
+.popupBox {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 350px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.back-btn {
+    position: fixed;   /* para mo-stick sa screen */
+    top: 500px;         /* distance gikan sa ibabaw */
+    left: 20px;        /* ibutang sa left side */
+    padding: 10px 15px;
+    font-size: 14px;
+    background: #555;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 2000;     /* para naa sa ibabaw sa uban elements */
+}
+
+</style>
+
+</style></head><body><h1>AudioVault Upload</h1><button id="startUpload">Start Uploading</button>
+<h2>Your Uploaded Songs</h2>
+
+{% for song in songs %}
+
+<div class="songItem"
+     data-path="{{ song.file_path.split('/')[-1] }}"
+     data-type="{{ song.file_type }}">
+<span class="icon">
+{% if song.file_type.lower() == "mp4" %}
+🎬
+{% else %}
+🎵
+{% endif %}
+</span>
+
+<div>
+<div class="songName">{{ song.file_name }}</div>
+<div class="songType">{{ song.file_type }}</div>
+</div>
+
+</div>
+
+{% endfor %}
+<audio id="audioPlayer" controls style="margin-top:20px;"></audio>
+
+<!-- POPUP --><div id="uploadPopup"><div class="popupBox"><h3>Upload Song</h3><form method="POST" enctype="multipart/form-data"><label>Select Song</label><br>
+<input type="file" name="song_file" accept="audio/*, video/*" required>
+
+<br><br>
+
+<label>File Name</label><br>
+<input type="text" name="file_name" placeholder="Enter song name" required>
+
+<br><br>
+
+<label>File Type</label><br>
+<input type="text" name="file_type" placeholder="Example: mp3" required>
+
+<br><br>
+
+<button type="submit">Upload</button>
+<br><br>
+
+<button type="button" id="closePopup">Cancel</button>
+
+</form></div></div>
+
+<!-- VIDEO POPUP PLAYER -->
+<div id="videoPopup" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.8);
+justify-content:center;
+align-items:center;
+z-index:2000;
+">
+
+<div style="position:relative">
+
+<video id="videoPlayer" controls width="700"></video>
+
+<br>
+<button id="closeVideo">Close</button>
+
+</div>
+</div>
+<button class="back-btn" onclick="goBack()">🔙 Back</button>
+
+<script>
+function goBack() {
+            window.location.href = "/dashboard"; // return to dashboard or main page
+        }
+const player = document.getElementById("audioPlayer")
+const videoPopup = document.getElementById("videoPopup")
+const videoPlayer = document.getElementById("videoPlayer")
+const closeVideo = document.getElementById("closeVideo")
+
+document.querySelectorAll(".songItem").forEach(song => {
+
+song.onclick = () => {
+
+const path = song.getAttribute("data-path")
+const type = song.getAttribute("data-type")
+
+if(type.toLowerCase().includes("mp4") || type.toLowerCase().includes("video")){
+
+videoPlayer.src = "/uploaded_songs/" + path
+videoPopup.style.display = "flex"
+videoPlayer.play()
+
+}else{
+
+player.src = "/uploaded_songs/" + path
+player.play()
+
+}
+
+}
+
+})
+
+closeVideo.onclick = () => {
+
+videoPopup.style.display = "none"
+videoPlayer.pause()
+
+}
+
+// open popup
+startUpload.onclick = () => {
+    uploadPopup.style.display = "flex"
+}
+
+// cancel popup
+closePopup.onclick = () => {
+    uploadPopup.style.display = "none"
+}
+</script>
+</body>
+</html>
