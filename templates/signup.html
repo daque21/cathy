@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: url('{{ url_for("static", filename="HZ4.jpg") }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        button.role-btn {
+            width: 200px;
+            padding: 15px;
+            margin: 10px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button.role-btn:hover {
+            background: #45a049;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7); 
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            margin: 15% auto; 
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button.submit-btn {
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button.submit-btn:hover {
+            background: #45a049;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Login as:</h2>
+
+<button class="role-btn" onclick="openModal('Administrator')">Administrator</button>
+<button class="role-btn" onclick="openModal('Manager')">Manager</button>
+<button class="role-btn" onclick="openModal('Employee')">Employee</button>
+
+<!-- The Modal -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3 id="roleTitle"></h3>
+    <form method="POST" id="loginForm">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="submit-btn">Login</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(role) {
+    document.getElementById('loginModal').style.display = 'block';
+    document.getElementById('roleTitle').innerText = "Login as " + role;
+    // Set action dynamically if needed
+    document.getElementById('loginForm').action = "/login/" + role.toLowerCase();
+}
+
+function closeModal() {
+    document.getElementById('loginModal').style.display = 'none';
+}
+
+// Close modal if user clicks outside modal content
+window.onclick = function(event) {
+    let modal = document.getElementById('loginModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
+
+</body>
+</html>
